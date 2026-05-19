@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'alphabet_list_screen.dart';
+import 'numbers_list_screen.dart';
 import 'shapes_matching_screen.dart';
 import 'profile_setup_screen.dart';
 import 'settings_screen.dart';
@@ -46,10 +47,10 @@ class HomeScreen extends ConsumerWidget {
             children: [
               const SizedBox(height: 40),
               const Text(
-                'ABCD App',
+                'Tracing & Learning App',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 48,
+                  fontSize: 40,
                   fontWeight: FontWeight.bold,
                   color: Colors.blue,
                 ),
@@ -65,6 +66,21 @@ class HomeScreen extends ConsumerWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const AlphabetListScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 24),
+              // Numbers Button
+              _MenuButton(
+                label: 'Numbers',
+                color: Colors.orange,
+                icon: Icons.numbers,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NumbersListScreen(),
                     ),
                   );
                 },

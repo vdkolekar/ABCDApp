@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/reward_dialog.dart';
 import '../providers/progress_provider.dart';
+import '../../data/services/tracing_validator.dart';
 
 class AlphabetTracingScreen extends ConsumerStatefulWidget {
   final String letter;
@@ -14,20 +15,41 @@ class AlphabetTracingScreen extends ConsumerStatefulWidget {
 
 class _AlphabetTracingScreenState extends ConsumerState<AlphabetTracingScreen> {
   List<Offset?> points = [];
+  static const double _fontSize = 300;
+  Size _canvasSize = Size.zero;
 
   void _onDone() {
-    const stars = 3;
+    final stars = TracingValidator.validate(
+      letter: widget.letter,
+      points: points,
+      size: _canvasSize,
+      fontSize: _fontSize,
+    );
+
+    if (stars == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Try drawing the letter first!')),
+      );
+      return;
+    }
+
     ref.read(progressProvider.notifier).saveProgress(
-      id: 'alphabet_${widget.letter.toLowerCase()}',
-      category: 'alphabet',
+      id: RegExp(r'^[0-9]+$').hasMatch(widget.letter) 
+          ? 'number_${widget.letter}' 
+          : 'alphabet_${widget.letter.toLowerCase()}',
+      category: RegExp(r'^[0-9]+$').hasMatch(widget.letter) ? 'number' : 'alphabet',
       stars: stars,
     );
 
     showDialog(
       context: context,
-      builder: (context) => const RewardDialog(stars: 3),
+      builder: (context) => RewardDialog(stars: stars),
     ).then((_) {
-      if (mounted) Navigator.pop(context);
+      if (mounted && stars >= 2) {
+        Navigator.pop(context);
+      } else if (mounted) {
+        setState(() => points.clear());
+      }
     });
   }
 
@@ -45,47 +67,53 @@ class _AlphabetTracingScreenState extends ConsumerState<AlphabetTracingScreen> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          // Letter Template
-          Center(
-            child: Text(
-              widget.letter,
-              style: TextStyle(
-                fontSize: 300,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.withAlpha(51), // ~0.2 opacity
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          _canvasSize = Size(constraints.maxWidth, constraints.maxHeight);
+          return Stack(
+            children: [
+              // Letter Template
+              Center(
+                child: Text(
+                  widget.letter,
+                  style: TextStyle(
+                    fontSize: _fontSize,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.withAlpha(51), // ~0.2 opacity
+                  ),
+                ),
               ),
-            ),
-          ),
-          // Tracing Layer
-          GestureDetector(
-            onPanUpdate: (details) {
-              setState(() {
-                RenderBox renderBox = context.findRenderObject() as RenderBox;
-                points.add(renderBox.globalToLocal(details.globalPosition));
-              });
-            },
-            onPanEnd: (details) {
-              points.add(null);
-            },
-            child: CustomPaint(
-              painter: TracingPainter(points: points),
-              size: Size.infinite,
-            ),
-          ),
-          // Done Button
-          Positioned(
-            bottom: 40,
-            right: 40,
-            child: FloatingActionButton.extended(
-              onPressed: _onDone,
-              backgroundColor: Colors.green,
-              icon: const Icon(Icons.check),
-              label: const Text('Done'),
-            ),
-          ),
-        ],
+              // Tracing Layer
+              GestureDetector(
+                onPanUpdate: (details) {
+                  setState(() {
+                    points.add(details.localPosition);
+                  });
+                },
+                onPanEnd: (details) {
+                  setState(() {
+                    points.add(null);
+                  });
+                },
+                child: CustomPaint(
+                  painter: TracingPainter(points: points),
+                  size: Size.infinite,
+                ),
+              ),
+              // Done Button
+              Positioned(
+                bottom: 40,
+                right: 40,
+                child: FloatingActionButton.extended(
+                  onPressed: _onDone,
+                  backgroundColor: Colors.green,
+                  icon: const Icon(Icons.check),
+                  label: const Text('Done'),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
