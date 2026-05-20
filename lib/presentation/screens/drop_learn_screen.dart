@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math';
 import 'activity_selection_screen.dart';
 import '../../domain/models/app_shape.dart';
 import '../widgets/shape_widget.dart';
 import '../widgets/reward_dialog.dart';
+import '../providers/phonics_provider.dart';
 
-class DropLearnScreen extends StatefulWidget {
+class DropLearnScreen extends ConsumerStatefulWidget {
   final CategoryType category;
 
   const DropLearnScreen({super.key, required this.category});
 
   @override
-  State<DropLearnScreen> createState() => _DropLearnScreenState();
+  ConsumerState<DropLearnScreen> createState() => _DropLearnScreenState();
 }
 
-class _DropLearnScreenState extends State<DropLearnScreen> {
-  late dynamic targetItem;
-  late List<dynamic> options;
+class _DropLearnScreenState extends ConsumerState<DropLearnScreen> {
+  late Object targetItem;
+  late List<Object> options;
   bool isUppercase = true;
   bool isCorrect = false;
 
@@ -40,14 +42,14 @@ class _DropLearnScreenState extends State<DropLearnScreen> {
     });
   }
 
-  List<dynamic> _getAllItems() {
+  List<Object> _getAllItems() {
     switch (widget.category) {
       case CategoryType.letters:
         return List.generate(26, (index) => String.fromCharCode(65 + index));
       case CategoryType.numbers:
         return List.generate(20, (index) => (index + 1).toString());
       case CategoryType.shapes:
-        return defaultShapes;
+        return List<Object>.from(defaultShapes);
     }
   }
 
@@ -82,15 +84,18 @@ class _DropLearnScreenState extends State<DropLearnScreen> {
               width: double.infinity,
               color: Colors.green.withAlpha(25),
               child: Center(
-                child: DragTarget<dynamic>(
+                child: DragTarget<Object>(
                   onWillAcceptWithDetails: (details) => details.data == targetItem,
                   onAcceptWithDetails: (details) {
                     setState(() => isCorrect = true);
+                    ref.read(phonicsServiceProvider).playItem(targetItem);
                     showDialog(
                       context: context,
                       barrierDismissible: false,
                       builder: (context) => const RewardDialog(stars: 3),
-                    ).then((_) => _generateLevel());
+                    ).then((_) {
+                      if (mounted) _generateLevel();
+                    });
                   },
                   builder: (context, candidateData, rejectedData) {
                     return Container(
@@ -126,7 +131,9 @@ class _DropLearnScreenState extends State<DropLearnScreen> {
                 itemCount: options.length,
                 itemBuilder: (context, index) {
                   final item = options[index];
-                  return Draggable<dynamic>(
+                  // Important: use a unique key for each item to ensure refresh
+                  return Draggable<Object>(
+                    key: ValueKey(item.hashCode),
                     data: item,
                     feedback: Material(
                       color: Colors.transparent,
@@ -156,7 +163,7 @@ class _DropLearnScreenState extends State<DropLearnScreen> {
     );
   }
 
-  Widget _buildItemDisplay(dynamic item, {bool isShadow = false, double size = 80}) {
+  Widget _buildItemDisplay(Object item, {bool isShadow = false, double size = 80}) {
     if (item is AppShape) {
       return ShapeWidget(type: item.type, color: item.color, size: size, isShadow: isShadow);
     }

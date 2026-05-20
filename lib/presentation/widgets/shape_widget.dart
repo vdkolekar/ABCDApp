@@ -58,11 +58,40 @@ class _ShapePainter extends CustomPainter {
           ..close();
         canvas.drawPath(path, paint);
         break;
-      case ShapeType.star:
-        canvas.drawPath(_getStarPath(size.width, size.height), paint);
-        break;
       case ShapeType.pentagon:
         canvas.drawPath(_getPolygonPath(5, size.width, size.height), paint);
+        break;
+      case ShapeType.rectangle:
+        canvas.drawRect(Rect.fromLTWH(0, size.height * 0.2, size.width, size.height * 0.6), paint);
+        break;
+      case ShapeType.oval:
+        canvas.drawOval(Rect.fromLTWH(0, size.height * 0.1, size.width, size.height * 0.8), paint);
+        break;
+      case ShapeType.hexagon:
+        canvas.drawPath(_getPolygonPath(6, size.width, size.height), paint);
+        break;
+      case ShapeType.crescent:
+        final path = Path()
+          ..addOval(Rect.fromLTWH(0, 0, size.width, size.height))
+          ..relativeMoveTo(size.width * 0.2, 0)
+          ..addOval(Rect.fromLTWH(size.width * 0.2, 0, size.width, size.height));
+        path.fillType = PathFillType.evenOdd;
+        canvas.drawPath(path, paint);
+        break;
+      case ShapeType.heart:
+        canvas.drawPath(_getHeartPath(size.width, size.height), paint);
+        break;
+      case ShapeType.diamond:
+        final path = Path()
+          ..moveTo(size.width / 2, 0)
+          ..lineTo(size.width, size.height / 2)
+          ..lineTo(size.width / 2, size.height)
+          ..lineTo(0, size.height / 2)
+          ..close();
+        canvas.drawPath(path, paint);
+        break;
+      case ShapeType.star:
+         canvas.drawPath(_getStarPath(size.width, size.height), paint);
         break;
     }
   }
@@ -88,6 +117,15 @@ class _ShapePainter extends CustomPainter {
       }
     }
     path.close();
+    return path;
+  }
+
+  Path _getHeartPath(double width, double height) {
+    final path = Path();
+    path.moveTo(width / 2, height * 0.25);
+    path.cubicTo(width * 0.2, height * 0.1, 0, height * 0.4, width / 2, height);
+    path.moveTo(width / 2, height * 0.25);
+    path.cubicTo(width * 0.8, height * 0.1, width, height * 0.4, width / 2, height);
     return path;
   }
 

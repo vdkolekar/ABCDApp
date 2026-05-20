@@ -70,7 +70,7 @@ class _LetterGrid extends ConsumerWidget {
         final displayLetter = isUppercase ? letter : letter.toLowerCase();
         return _TapCard(
           child: Text(displayLetter, style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.orange)),
-          onTap: () => ref.read(phonicsServiceProvider).playLetter(letter),
+          onTap: () => ref.read(phonicsServiceProvider).playItem(letter),
         );
       },
     );
@@ -80,17 +80,56 @@ class _LetterGrid extends ConsumerWidget {
 class _NumberGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return GridView.builder(
+    return ListView.builder(
       padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4, crossAxisSpacing: 12, mainAxisSpacing: 12,
-      ),
-      itemCount: 20,
-      itemBuilder: (context, index) {
-        final number = (index + 1).toString();
-        return _TapCard(
-          child: Text(number, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.orange)),
-          onTap: () => ref.read(phonicsServiceProvider).playLetter(number),
+      itemCount: 5, // 5 sections of 10 numbers
+      itemBuilder: (context, sectionIndex) {
+        final startNumber = (sectionIndex * 10) + 1;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (sectionIndex > 0)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                child: Divider(thickness: 2, color: Colors.orange),
+              ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Text(
+                'Numbers $startNumber to ${startNumber + 9}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange,
+                ),
+              ),
+            ),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.2,
+              ),
+              itemCount: 10,
+              itemBuilder: (context, index) {
+                final number = (startNumber + index).toString();
+                return _TapCard(
+                  child: Text(
+                    number,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange,
+                    ),
+                  ),
+                  onTap: () => ref.read(phonicsServiceProvider).playItem(number),
+                );
+              },
+            ),
+          ],
         );
       },
     );
@@ -117,7 +156,7 @@ class _ShapeGrid extends ConsumerWidget {
               Text(shape.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
             ],
           ),
-          onTap: () => ref.read(phonicsServiceProvider).playLetter(shape.name),
+          onTap: () => ref.read(phonicsServiceProvider).playItem(shape),
         );
       },
     );
